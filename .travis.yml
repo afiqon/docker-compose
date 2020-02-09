@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t afiqon/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run afiqon/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t afiqon/multi-client ./client
+    - docker build -t afiqon/multi-nginx ./nginx
+    - docker build -t afiqon/multi-server ./server
+    - docker build -t afiqon/multi-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take those images and push them to docker hub
+    - docker push afiqon/multi-client
+    - docker push afiqon/multi-nginx
+    - docker push afiqon/multi-server
+    - docker push afiqon/multi-worker
